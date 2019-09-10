@@ -15,7 +15,53 @@
 * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 */
 
-$('#bt_importEqLogic').on('click', function () {
+$('#bt_importTemplate').off('click').on('click', function () {
+  $.ajax({
+    type: "POST",
+    url: "plugins/virtual/core/ajax/virtual.ajax.php",
+    data: {
+      action: "getTemplateList",
+    },
+    dataType: 'json',
+    error: function (request, status, error) {
+      handleAjaxError(request, status, error);
+    },
+    success: function (data) {
+      var inputOptions = [];
+      for(var i in data.result){
+        inputOptions.push({
+          text : data.result[i].name,
+          value : i
+        })
+      }
+      bootbox.prompt({
+        title: "Quel template ?",
+        inputType: 'select',
+        inputOptions: inputOptions,
+        callback: function (result) {
+          $.ajax({
+            type: "POST",
+            url: "plugins/virtual/core/ajax/virtual.ajax.php",
+            data: {
+              action: "applyTemplate",
+              id: $('.eqLogicAttr[data-l1key=id]').value(),
+              name : result
+            },
+            dataType: 'json',
+            error: function (request, status, error) {
+              handleAjaxError(request, status, error);
+            },
+            success: function (data) {
+              $('.eqLogicDisplayCard[data-eqLogic_id='+$('.eqLogicAttr[data-l1key=id]').value()+']').click();
+            }
+          });
+        }
+      });
+    }
+  });
+});
+
+$('#bt_importEqLogic').off('click').on('click', function () {
   jeedom.eqLogic.getSelectModal({}, function (result) {
     $.ajax({
       type: "POST",
@@ -48,13 +94,13 @@ $('#bt_cronGenerator').on('click',function(){
 });
 
 $("#bt_addVirtualInfo").on('click', function (event) {
-  var _cmd = {type: 'info'};
-  addCmdToTable(_cmd);
+  addCmdToTable({type: 'info'});
+  modifyWithoutSave = true;
 });
 
 $("#bt_addVirtualAction").on('click', function (event) {
-  var _cmd = {type: 'action'};
-  addCmdToTable(_cmd);
+  addCmdToTable({type: 'action'});
+  modifyWithoutSave = true;
 });
 
 $('.bt_showExpressionTest').off('click').on('click', function () {
@@ -97,7 +143,6 @@ function addCmdToTable(_cmd) {
   }
   
   if (init(_cmd.type) == 'info') {
-    var disabled = (init(_cmd.configuration.virtualAction) == '1') ? 'disabled' : '';
     var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '" virtualAction="' + init(_cmd.configuration.virtualAction) + '">';
     tr += '<td>';
     tr += '<span class="cmdAttr" data-l1key="id"></span>';
@@ -108,19 +153,30 @@ function addCmdToTable(_cmd) {
     tr += '<input class="cmdAttr form-control type input-sm" data-l1key="type" value="info" disabled style="margin-bottom : 5px;" />';
     tr += '<span class="subType" subType="' + init(_cmd.subType) + '"></span>';
     tr += '</td>';
-    tr += '<td><textarea class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="calcul" style="height : 33px;" ' + disabled + ' placeholder="{{Calcul}}"></textarea>';
-    tr += '<a class="btn btn-default cursor listEquipementInfo btn-sm" data-input="calcul"><i class="fa fa-list-alt "></i> {{Rechercher équipement}}</a>';
-    tr += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="returnStateValue" placeholder="{{Valeur retour d\'état}}" style="margin : 5px;width : 30%;display : inline-block;">';
-    tr += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="returnStateTime" placeholder="{{Durée avant retour d\'état (min)}}" style="margin : 5px;width : 30%;display : inline-block;">';
-    tr += '</td>';
-    tr += '<td><input class="cmdAttr form-control input-sm" data-l1key="unite" style="width : 90px;" placeholder="{{Unité}}"></td>';
     tr += '<td>';
+    if(init(_cmd.configuration.virtualAction) != '1'){
+      tr += '<textarea class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="calcul" style="height : 33px;" placeholder="{{Calcul}}"></textarea>';
+      tr += '<a class="btn btn-default cursor listEquipementInfo btn-sm" data-input="calcul" style="width:100%;margin-top:2px;"><i class="fa fa-list-alt"></i> {{Rechercher équipement}}</a>';
+    }
+    tr += '</td>';
+    
+    tr += '<td>';
+    tr += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="returnStateValue" placeholder="{{Valeur retour d\'état}}" style="width:48%;display:inline-block;">';
+    tr += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="returnStateTime" placeholder="{{Durée avant retour d\'état (min)}}" style="width:48%;display:inline-block;margin-left:2px;">';
+    tr += '<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="updateCmdId" style="display : none;" title="Commande d\'information à mettre à jour">';
+    tr += '<option value="">Aucune</option>';
+    tr += '</select>';
+    tr += '</td>';
+    tr += '<td>';
+    tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min}}" title="{{Min}}" style="width:30%;display:inline-block;">';
+    tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max}}" title="{{Max}}" style="width:30%;display:inline-block;">';
+    tr += '<input class="cmdAttr form-control input-sm" data-l1key="unite" placeholder="Unité" title="{{Unité}}" style="width:30%;display:inline-block;margin-left:2px;">';
+    tr += '<input class="tooltips cmdAttr form-control input-sm expertModeVisible" data-l1key="configuration" data-l2key="listValue" placeholder="{{Liste de valeur|texte séparé par ;}}" title="{{Liste}}">';
     tr += '<span><label class="checkbox-inline"><input type="checkbox" class="cmdAttr checkbox-inline" data-l1key="isVisible" checked/>{{Afficher}}</label></span> ';
     tr += '<span><label class="checkbox-inline"><input type="checkbox" class="cmdAttr checkbox-inline" data-l1key="isHistorized" checked/>{{Historiser}}</label></span> ';
-    tr += '<span><label class="checkbox-inline"><input type="checkbox" class="cmdAttr expertModeVisible" data-l1key="display" data-l2key="invertBinary"/>{{Inverser}}</label></span><br/>';
-    tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min}}" title="{{Min}}" style="width : 40%;display : inline-block;"> ';
-    tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max}}" title="{{Max}}" style="width : 40%;display : inline-block;">';
+    tr += '<span><label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="display" data-l2key="invertBinary"/>{{Inverser}}</label></span> ';
     tr += '</td>';
+    
     tr += '<td>';
     if (is_numeric(_cmd.id)) {
       tr += '<a class="btn btn-default btn-xs cmdAction expertModeVisible" data-action="configure"><i class="fas fa-cogs"></i></a> ';
@@ -161,23 +217,34 @@ function addCmdToTable(_cmd) {
     tr += '<input class="cmdAttr" data-l1key="configuration" data-l2key="virtualAction" value="1" style="display:none;" />';
     tr += '</td>';
     tr += '<td>';
-    tr += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="infoName" placeholder="{{Nom information}}" style="margin-bottom : 5px;width : 70%; display : inline-block;" />';
-    tr += '<a class="btn btn-default btn-sm cursor listEquipementAction" data-input="infoName" style="margin-left : 5px;"><i class="fa fa-list-alt "></i> {{Rechercher équipement}}</a>';
-    tr += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="value" placeholder="{{Valeur}}" style="margin-bottom : 5px;width : 50%; display : inline-block;" />';
-    tr += '<a class="btn btn-default btn-sm cursor listEquipementInfo" data-input="value" style="margin-left : 5px;"><i class="fa fa-list-alt "></i> {{Rechercher équipement}}</a>';
+    tr += '<div class="input-group">';
+    tr += '<input class="cmdAttr form-control input-sm roundedLeft" data-l1key="configuration" data-l2key="infoName" placeholder="{{Nom information}}"/>';
+    tr += '<span class="input-group-btn">';
+    tr += '<a class="btn btn-default btn-sm cursor listEquipementAction roundedRight" data-input="infoName"><i class="fa fa-list-alt "></i></a>';
+    tr += '</span>';
+    tr += '</div>';
+    tr += '<div class="input-group">';
+    tr += '<input class="cmdAttr form-control input-sm roundedLeft" data-l1key="configuration" data-l2key="value" placeholder="{{Valeur}}" />';
+    tr += '<span class="input-group-btn">';
+    tr += '<a class="btn btn-default btn-sm cursor listEquipementInfo roundedRight" data-input="value"><i class="fa fa-list-alt "></i></a>';
+    tr += '</span>';
+    tr += '</div>';
     tr += '</td>';
-    tr += '<td></td>';
     tr += '<td>';
-    tr += '<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="updateCmdId" style="display : none;margin-top : 5px;" title="Commande d\'information à mettre à jour">';
+    tr += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="returnStateValue" placeholder="{{Valeur retour d\'état}}" style="width:48%;display:inline-block;">';
+    tr += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="returnStateTime" placeholder="{{Durée avant retour d\'état (min)}}" style="width:48%;display:inline-block;margin-left:2px;">';
+    tr += '<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="updateCmdId" style="display : none;" title="Commande d\'information à mettre à jour">';
     tr += '<option value="">Aucune</option>';
     tr += '</select>';
-    tr += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="updateCmdToValue" placeholder="Valeur de l\'information" style="display : none;margin-top : 5px;">';
+    tr += '</td>';
+    tr += '<td>';
+    tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min}}" title="{{Min}}" style="width:30%;display:inline-block;">';
+    tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max}}" title="{{Max}}" style="width:30%;display:inline-block;">';
+    tr += '<input class="cmdAttr form-control input-sm" data-l1key="unite" placeholder="Unité" title="{{Unité}}" style="width:30%;display:inline-block;margin-left:2px;">';
+    tr += '<input class="tooltips cmdAttr form-control input-sm expertModeVisible" data-l1key="configuration" data-l2key="listValue" placeholder="{{Liste de valeur|texte séparé par ;}}" title="{{Liste}}">';
     tr += '<span><label class="checkbox-inline"><input type="checkbox" class="cmdAttr checkbox-inline" data-l1key="isVisible" checked/>{{Afficher}}</label></span> ';
-    tr += '<input class="tooltips cmdAttr form-control input-sm expertModeVisible" data-l1key="configuration" data-l2key="listValue" placeholder="{{Liste de valeur|texte séparé par ;}}" title="{{Liste}}" style="margin-top : 5px;">';
-    tr += '<span class="input-group">';
-    tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min}}" title="{{Min}}" style="width : 40%;display : inline-block;" /> ';
-    tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max}}" title="{{Max}}" style="width : 40%;display : inline-block;" />';
-    tr += '</span>';
+    tr += '<span><label class="checkbox-inline"><input type="checkbox" class="cmdAttr checkbox-inline" data-l1key="isHistorized" checked/>{{Historiser}}</label></span> ';
+    tr += '<span><label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="display" data-l2key="invertBinary"/>{{Inverser}}</label></span> ';
     tr += '</td>';
     tr += '<td>';
     if (is_numeric(_cmd.id)) {
