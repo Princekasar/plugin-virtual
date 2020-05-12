@@ -315,10 +315,12 @@ class virtualCmd extends cmd {
 					if(is_string($result)){
 						$result = str_replace('"', '', $result);
 					}
+					$this->event($result);
 					return $result;
 				} catch (Exception $e) {
 					log::add('virtual', 'info', $e->getMessage());
-					return $this->formatValue(str_replace('"','',jeedom::evaluateExpression($this->getConfiguration('calcul'))));
+					$this->event($this->getConfiguration('calcul'));
+					return $this->getConfiguration('calcul');
 				}
 			}
 			break;
@@ -330,7 +332,11 @@ class virtualCmd extends cmd {
 					foreach ($cmds as $cmd_id) {
 						$cmd = cmd::byId(str_replace('#', '', $cmd_id));
 						if (is_object($cmd)) {
-							$cmd->execCmd($_options);
+							try {
+								$cmd->execCmd($_options);
+							} catch (\Exception $e) {
+								
+							}
 						}
 					}
 					return;
