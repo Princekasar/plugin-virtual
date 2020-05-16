@@ -303,8 +303,9 @@ class virtualCmd extends cmd {
 	}
 	
 	public function execute($_options = null) {
+		$eqLogic = $this->getEqLogic();
 		if ($this->getLogicalId() == 'refresh') {
-			$this->getEqLogic()->refresh();
+			$eqLogic->refresh();
 			return;
 		}
 		switch ($this->getType()) {
@@ -315,11 +316,9 @@ class virtualCmd extends cmd {
 					if(is_string($result)){
 						$result = str_replace('"', '', $result);
 					}
-					$this->event($result);
 					return $result;
 				} catch (Exception $e) {
 					log::add('virtual', 'info', $e->getMessage());
-					$this->event($this->getConfiguration('calcul'));
 					return $this->getConfiguration('calcul');
 				}
 			}
@@ -361,7 +360,7 @@ class virtualCmd extends cmd {
 				if ($this->getSubtype() == 'message') {
 					$result = $_options['title'] . ' ' . $_options['message'];
 				}
-				$virtualCmd->event($result);
+				$eqLogic->checkAndUpdateCmd($virtualCmd,$result);
 			}
 			break;
 		}
