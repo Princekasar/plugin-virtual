@@ -41,7 +41,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 		<div class="input-group pull-right" style="display:inline-flex">
 			<span class="input-group-btn">
 				<a class="btn btn-primary btn-sm bt_showExpressionTest roundedLeft"><i class="fas fa-check"></i> {{Expression}}
-				</a><a class="btn btn-default btn-sm" id="bt_importTemplate"><i class="fas fa-cubes"></i> {{Template}}
+				</a><a class="btn btn-default btn-sm" id="bt_importTemplate"><i class="fas fa-cubes"></i> {{Modèles}}
 				</a><a class="btn btn-default btn-sm" id="bt_importEqLogic"><i class="fas fa-share"></i> {{Importer équipement}}
 				</a><a class="btn btn-default btn-sm eqLogicAction" data-action="configure"><i class="fas fa-cogs"></i> {{Configuration avancée}}
 				</a><a class="btn btn-default btn-sm eqLogicAction" data-action="copy"><i class="fas fa-copy"></i> {{Dupliquer}}
