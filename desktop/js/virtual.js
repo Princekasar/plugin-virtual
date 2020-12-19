@@ -35,7 +35,7 @@ $('#bt_importTemplate').off('click').on('click', function () {
         })
       }
       bootbox.prompt({
-        title: "Quel template ?",
+        title: "Choisir un modèle ?",
         inputType: 'select',
         inputOptions: inputOptions,
         callback: function (result) {
